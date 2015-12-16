@@ -36,7 +36,7 @@ def makePicture(videofile, outputname):
     print c.isOpened()
 
     framecount = c.get(cv2.CAP_PROP_FRAME_COUNT)
-    fps = c.get(cv2.CAP_PROP_FPS)
+    fps = int(c.get(cv2.CAP_PROP_FPS))
 
     if VERBOSE:
         print "Frame count: " + str(framecount)
@@ -44,16 +44,12 @@ def makePicture(videofile, outputname):
 
     frames = 1
     while frames < framecount:
-
         if frames % fps == 0:
             ret, img = c.read()
             values.append(getDominant(img))
             if VERBOSE:
                 cli_progress(frames,framecount)
                 print ("\t" + str(frames) + "/" + str(int(framecount)) + " completed")
-
-
-
         frames += 1
     '''
     width_array = []
@@ -78,7 +74,7 @@ def makePicture(videofile, outputname):
 
 
     res = cv2.resize(pic,(PICTURE_WIDTH, PICTURE_HEIGHT), interpolation= cv2.INTER_CUBIC)
-
+    cv2.imwrite("starwarsOrig.jpg", pic)
     cv2.imwrite(outputname,res)
 
 
@@ -86,4 +82,4 @@ def makePicture(videofile, outputname):
 VERBOSE = True
 
 
-makePicture('VIDEO0038.mp4', 'test.jpg')
+makePicture('starwars1.mp4', 'starwars.jpg')
