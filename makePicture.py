@@ -1,11 +1,14 @@
 import cv2
 import numpy as np
 import sys
-from pprint import pprint
+import Image
+import getopt
+import time
 
 PICTURE_WIDTH = 3840
 PICTURE_HEIGHT = 2160
 
+NUM_CLUSTERS = 5
 VERBOSE = False
 
 def cli_progress(current_val, end_val, bar_length=20):
@@ -14,13 +17,13 @@ def cli_progress(current_val, end_val, bar_length=20):
     spaces = ' ' * (bar_length - len(hashes))
     sys.stdout.write("\rPercent: [{0}] {1}%".format(hashes + spaces, int(round(percent * 100))))
     sys.stdout.flush()
-
+'''
 def getDominant(img):
     Z = img.reshape((-1,3))
     Z = np.float32(Z)
 
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0)
-    K = 3
+    K = 2
 
     ret,label,center=cv2.kmeans(Z,K,None,criteria,10,cv2.KMEANS_RANDOM_CENTERS)
 
@@ -28,12 +31,36 @@ def getDominant(img):
     res = center[label.flatten()]
 
     return res[0]
+'''
+
+def getColor(img):
+    img = Image.fromarray(img)
+    img = img.resize((150,150))
+
+    result = img.convert('P', palette=Image.ADAPTIVE, colors = 3)
+    result.putalpha(0)
+    colors = result.getcolors(150*150)
+
+    max = 0
+    index = 0
+    for i in range(0,len(colors)):
+        if colors[i][0] > max:
+            max = colors[i][0]
+            index = i
+
+    BGR = list(reversed(colors[index][1][0:3]))
+    return BGR
 
 def makePicture(videofile, outputname):
-    pic = np.zeros((PICTURE_HEIGHT,PICTURE_WIDTH,3), np.uint8)
+    start_time = int(round(time.time() * 1000))
     values = []
     c = cv2.VideoCapture(videofile)
-    print c.isOpened()
+    if VERBOSE:
+        if c.isOpened():
+            print ("Video succesfully loaded.")
+        else:
+            print ("Video not loaded")
+
 
     framecount = c.get(cv2.CAP_PROP_FRAME_COUNT)
     fps = int(c.get(cv2.CAP_PROP_FPS))
@@ -46,26 +73,11 @@ def makePicture(videofile, outputname):
     while frames < framecount:
         if frames % fps == 0:
             ret, img = c.read()
-            values.append(getDominant(img))
+            values.append(getColor(img))
             if VERBOSE:
                 cli_progress(frames,framecount)
                 print ("\t" + str(frames) + "/" + str(int(framecount)) + " completed")
         frames += 1
-    '''
-    width_array = []
-    values_index = 0
-    block_width = PICTURE_WIDTH / len(values)
-    i = 1
-    while i <= PICTURE_WIDTH:
-        width_array.append(values[values_index])
-        if block_width % i == 0:
-            values_index += 1
-            print "Value " + str(values_index) + " out of " + str(len(values))
-        i += 1
-
-    for i in range(0,PICTURE_HEIGHT):
-        pic[i] = width_array
-    '''
 
     pic = np.zeros((PICTURE_HEIGHT, len(values), 3), np.uint8)
 
@@ -74,12 +86,51 @@ def makePicture(videofile, outputname):
 
 
     res = cv2.resize(pic,(PICTURE_WIDTH, PICTURE_HEIGHT), interpolation= cv2.INTER_CUBIC)
-    cv2.imwrite("starwarsOrig.jpg", pic)
-    cv2.imwrite(outputname,res)
+    cv2.imwrite("pics/" + outputname + "_orig.jpg", pic)
+    cv2.imwrite("pics/" + outputname + ".jpg",res)
 
+    end_time = int(round(time.time() * 1000))
+    elapsed_time = (end_time - start_time)/1000
 
+    if VERBOSE:
+        print ("Finished in " + str(elapsed_time) + " seconds.")
 
-VERBOSE = True
+def usage():
+    print ("-i or --input: Input file name")
+    print ("-o or --output: Output file name without extension")
+    print ("-v or --verbose: Verbose/debug mode")
+    print ("--width and --height: width and height of the picture")
+    print ("-h or --help: Shows usage of arguments")
 
+def main(argv):
+    global VERBOSE, PICTURE_WIDTH, PICTURE_HEIGHT
+    input = ""
+    output = ""
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:v", ["help", "input=", "output=", "verbose", "width", "height"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt in ("-h", "--help"):
+            usage()
+            sys.exit()
+        elif opt in ("-v", "--verbose"):
+            VERBOSE = True
+        elif opt in ("-i", "--input"):
+            input = arg
+        elif opt in ("-o", "--output"):
+            output = arg
+        elif opt in ("--width"):
+            PICTURE_WIDTH = int(arg)
+        elif opt in ("--height"):
+            PICTURE_HEIGHT = int(arg)
+    if len(output) == 0 or len(input) == 0:
+        print ("Invalid arguments!")
+        print opts
+        usage()
+        sys.exit()
+    else:
+        makePicture(input, output)
 
-makePicture('starwars1.mp4', 'starwars.jpg')
+main(sys.argv[1:])
