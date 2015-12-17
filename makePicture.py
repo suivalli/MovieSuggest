@@ -14,11 +14,11 @@ PICTURE_HEIGHT = 2160
 NUM_CLUSTERS = 5
 VERBOSE = False
 
-def cli_progress(current_val, end_val, bar_length=20):
+def cli_progress(current_val, end_val, filename, bar_length=20):
     percent = float(current_val) / end_val
     hashes = '#' * int(round(percent * bar_length))
     spaces = ' ' * (bar_length - len(hashes))
-    sys.stdout.write("\rPercent: [{0}] {1}%".format(hashes + spaces, int(round(percent * 100))))
+    sys.stdout.write("\rPercent: [{0}] {1}%\tfile {2}".format(hashes + spaces, int(round(percent * 100)), filename))
     sys.stdout.flush()
 '''
 def getDominant(img):
@@ -102,10 +102,11 @@ def makePicture(videofile, outputname):
             ret = c.grab()
         elif frames % fps == 0:
             ret, img = c.read()
-            values.append(getColor(img))
+            if ret:
+                values.append(getColor(img))
             if VERBOSE:
-                cli_progress(frames,framecount)
-                print ("\t" + str(frames) + "/" + str(int(framecount)) + " completed")
+                cli_progress(frames,framecount, outputname)
+                #print ("\t" + str(frames) + "/" + str(int(framecount)) + " completed")
         frames += 1
 
     pic = np.zeros((PICTURE_HEIGHT, len(values), 3), np.uint8)
@@ -134,21 +135,18 @@ def getAudio(videofile):
         print "Audio made!"
 
 def getMovieFiles(directory):
-    files = []
+    filesArray = []
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".mp4"):
-                print (os.path.join(root, file))
-                print (file)
-                files.append((os.path.join(root,file), file))
+                filesArray.append((os.path.join(root,file), file))
             if file.endswith(".avi"):
-                print (os.path.join(root, file))
-                print (file)
-                files.append((os.path.join(root,file), file))
-    for file in files:
+                filesArray.append((os.path.join(root,file), file))
+            if file.endswith(".mkv"):
+                filesArray.append((os.path.join(root,file), file))
+    for file in filesArray:
         filename = file[1].split(".")[0]
-        if VERBOSE:
-            print ("Starting to process file " + filename + ".")
+        print ("Starting to process file " + filename + ".")
         makePicture(file[0], filename)
 
 def usage():
@@ -162,7 +160,7 @@ def main(argv):
     global VERBOSE, PICTURE_WIDTH, PICTURE_HEIGHT
     input = ""
     output = ""
-    dir = ""
+    directory = ""
     try:
         opts, args = getopt.getopt(argv, "d:hi:o:v", ["directory=","help", "input=", "output=", "verbose", "width", "height"])
     except getopt.GetoptError:
