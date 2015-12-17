@@ -4,6 +4,8 @@ import sys
 import Image
 import getopt
 import time
+import subprocess
+import colorsys
 
 PICTURE_WIDTH = 3840
 PICTURE_HEIGHT = 2160
@@ -33,13 +35,31 @@ def getDominant(img):
     return res[0]
 '''
 
+def makeTestVideo():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fps = 25.0
+    video = cv2.VideoWriter("test.avi",fourcc,fps,(1280,720))
+    pic = np.zeros((720, 1280, 3), np.uint8)
+    for i in range(0,1000):
+        video.write(pic)
+        if i == 500:
+            pic[pic == 0] = 255
+
 def getColor(img):
     img = Image.fromarray(img)
     img = img.resize((150,150))
 
-    result = img.convert('P', palette=Image.ADAPTIVE, colors = 3)
+    result = img.convert('P', palette=Image.ADAPTIVE, colors = 5)
     result.putalpha(0)
     colors = result.getcolors(150*150)
+
+    maxBrightness = 0
+    indexBrightness = 0
+    for i in range(0,len(colors)):
+        coll = sum(colors[i][1])
+        if coll > maxBrightness:
+            maxBrightness = coll
+            indexBrightness = i
 
     max = 0
     index = 0
@@ -48,7 +68,13 @@ def getColor(img):
             max = colors[i][0]
             index = i
 
-    BGR = list(reversed(colors[index][1][0:3]))
+    maxColor = (float(colors[index][1][0])/255, float(colors[index][1][1])/255, float(colors[index][1][2])/255)
+    maxColor = colorsys.rgb_to_hsv(maxColor[0],maxColor[1],maxColor[2])
+
+    if (maxColor[2]) >= 0.15:
+        BGR = list(reversed(colors[index][1][0:3]))
+    else:
+        BGR = list(reversed(colors[indexBrightness][1][0:3]))
     return BGR
 
 def makePicture(videofile, outputname):
@@ -71,7 +97,9 @@ def makePicture(videofile, outputname):
 
     frames = 1
     while frames < framecount:
-        if frames % fps == 0:
+        if frames % fps != 0:
+            ret = c.grab()
+        elif frames % fps == 0:
             ret, img = c.read()
             values.append(getColor(img))
             if VERBOSE:
@@ -80,7 +108,6 @@ def makePicture(videofile, outputname):
         frames += 1
 
     pic = np.zeros((PICTURE_HEIGHT, len(values), 3), np.uint8)
-
     for i in range(0,PICTURE_HEIGHT):
         pic[i] = values
 
@@ -94,6 +121,14 @@ def makePicture(videofile, outputname):
 
     if VERBOSE:
         print ("Finished in " + str(elapsed_time) + " seconds.")
+
+def getAudio(videofile):
+    command = "ffmpeg -i " + videofile + " -ab 160k -ac 2 -ar 44100 -vn audio.mp3"
+
+    subprocess.call(command, shell=True)
+
+    if VERBOSE:
+        print "Audio made!"
 
 def usage():
     print ("-i or --input: Input file name")
@@ -131,6 +166,9 @@ def main(argv):
         usage()
         sys.exit()
     else:
+        #getAudio(input)
         makePicture(input, output)
 
+
+#makeTestVideo()
 main(sys.argv[1:])
