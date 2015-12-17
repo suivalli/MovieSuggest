@@ -6,6 +6,7 @@ import getopt
 import time
 import subprocess
 import colorsys
+import os
 
 PICTURE_WIDTH = 3840
 PICTURE_HEIGHT = 2160
@@ -111,8 +112,10 @@ def makePicture(videofile, outputname):
     for i in range(0,PICTURE_HEIGHT):
         pic[i] = values
 
-
+    dat = np.zeros((1, len(values), 3), np.uint8)
+    dat[0] = values
     res = cv2.resize(pic,(PICTURE_WIDTH, PICTURE_HEIGHT), interpolation= cv2.INTER_CUBIC)
+    cv2.imwrite("pics/" + outputname + "_dat.jpg", dat)
     cv2.imwrite("pics/" + outputname + "_orig.jpg", pic)
     cv2.imwrite("pics/" + outputname + ".jpg",res)
 
@@ -130,6 +133,24 @@ def getAudio(videofile):
     if VERBOSE:
         print "Audio made!"
 
+def getMovieFiles(directory):
+    files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".mp4"):
+                print (os.path.join(root, file))
+                print (file)
+                files.append((os.path.join(root,file), file))
+            if file.endswith(".avi"):
+                print (os.path.join(root, file))
+                print (file)
+                files.append((os.path.join(root,file), file))
+    for file in files:
+        filename = file[1].split(".")[0]
+        if VERBOSE:
+            print ("Starting to process file " + filename + ".")
+        makePicture(file[0], filename)
+
 def usage():
     print ("-i or --input: Input file name")
     print ("-o or --output: Output file name without extension")
@@ -141,8 +162,9 @@ def main(argv):
     global VERBOSE, PICTURE_WIDTH, PICTURE_HEIGHT
     input = ""
     output = ""
+    dir = ""
     try:
-        opts, args = getopt.getopt(argv, "hi:o:v", ["help", "input=", "output=", "verbose", "width", "height"])
+        opts, args = getopt.getopt(argv, "d:hi:o:v", ["directory=","help", "input=", "output=", "verbose", "width", "height"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -156,18 +178,23 @@ def main(argv):
             input = arg
         elif opt in ("-o", "--output"):
             output = arg
+        elif opt in ("-d", "--directory"):
+            directory = arg
         elif opt in ("--width"):
             PICTURE_WIDTH = int(arg)
         elif opt in ("--height"):
             PICTURE_HEIGHT = int(arg)
-    if len(output) == 0 or len(input) == 0:
+    if (len(output) == 0 or len(input) == 0) and len(directory) == 0:
         print ("Invalid arguments!")
         print opts
         usage()
         sys.exit()
     else:
         #getAudio(input)
-        makePicture(input, output)
+        if len(directory) == 0:
+            makePicture(input, output)
+        else:
+            getMovieFiles(directory)
 
 
 #makeTestVideo()
