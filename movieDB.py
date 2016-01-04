@@ -1,14 +1,25 @@
 import sqlite3
 import csv
+import os
 
 #DO NOT PUT THE FLAG TO TRUE IF YOU DON't WANT TO CREATE ALL OF THE DB AGAIN!
-CREATING = False
+CREATING = True
 
-conn = sqlite3.connect("data\movies2.db")
+conn = sqlite3.connect("data\movies.db")
 
 conn.text_factory = str
 
 c = conn.cursor()
+
+def getPicNames():
+    filesArray = []
+    for root, dirs, files in os.walk("pics"):
+        for file in files:
+            if file.endswith("_dat.jpg"):
+                filesArray.append(file.split("_")[0])
+    return filesArray
+
+pics =  getPicNames()
 
 if CREATING:
     movieCreate = 'CREATE TABLE IF NOT EXISTS MOVIES ' \
@@ -38,7 +49,8 @@ if CREATING:
         count = 0
         for row in read:
             if count != 0:
-                rows.append((int(row[0]), row[1], row[2]))
+                if row[0] in pics:
+                    rows.append((int(row[0]), row[1], row[2]))
             count += 1
         c.executemany('INSERT INTO MOVIES VALUES (?,?,?)', rows)
         conn.commit()
@@ -50,9 +62,10 @@ if CREATING:
         count = 0
         for row in read:
             if count != 0:
-                movieID = int(row[1])
-                rating = float(row[2])
-                rows.append((movieID, rating))
+                if row[1] in pics:
+                    movieID = int(row[1])
+                    rating = float(row[2])
+                    rows.append((movieID, rating))
             count += 1
         c.executemany('INSERT INTO RATINGS VALUES (?,?)', rows)
         conn.commit()
@@ -63,9 +76,10 @@ if CREATING:
         count = 0
         for row in read:
             if count != 0:
-                movieID = int(row[1])
-                tag = row[2]
-                rows.append((movieID, tag))
+                if row[1] in pics:
+                    movieID = int(row[1])
+                    tag = row[2]
+                    rows.append((movieID, tag))
             count += 1
         c.executemany('INSERT INTO TAGS VALUES (?,?)', rows)
         conn.commit()
@@ -114,7 +128,7 @@ def getSimilarMovieNameAndIDs(MovieName):
 #print getAvgRating(1)
 #print getGenres(1)
 #print getTags(100)
-print getName(4816)
+#print getName(4816)
 #print getRatingCount(588)
 #print getSimilarMovieNameAndIDs("Toy")
 
