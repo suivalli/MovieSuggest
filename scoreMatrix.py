@@ -38,7 +38,7 @@ def getScore(pic1,pic2):
     return score
 
 def writeDistanceMatrix(pics):
-    f = open("matrix.csv", 'w')
+    f = open("data/matrix.csv", 'w')
     row = "\t"
     for i in range(0,len(pics)):
         row +=  pics[i].split("\\")[1].split("_")[0] + "\t"
@@ -64,7 +64,7 @@ def getBestMovies(distances):
     return (first, second, third, fourth, fifth)
 
 def findRecommendations(MovieID):
-    f = open("matrix.csv", 'r')
+    f = open("data/matrix.csv", 'r')
     header = True
     for row in f:
         if header:
@@ -77,6 +77,6 @@ def findRecommendations(MovieID):
                 break
     return (movies[indexes[0] + 1], movies[indexes[1] + 1], movies[indexes[2] + 1], movies[indexes[3] + 1], movies[indexes[4] + 1])
 
-writeDistanceMatrix(getPics())
+#writeDistanceMatrix(getPics())
 #print getNumTransforms('pics/Pirates of the Caribbean On Stranger Tides_dat.jpg')
 #print findRecommendations('Sin City')

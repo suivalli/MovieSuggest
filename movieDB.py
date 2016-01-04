@@ -3,12 +3,11 @@ import csv
 import os
 
 #DO NOT PUT THE FLAG TO TRUE IF YOU DON't WANT TO CREATE ALL OF THE DB AGAIN!
-CREATING = True
+CREATING = False
+
 
 conn = sqlite3.connect("data\movies.db")
-
 conn.text_factory = str
-
 c = conn.cursor()
 
 def getPicNames():
@@ -19,9 +18,13 @@ def getPicNames():
                 filesArray.append(file.split("_")[0])
     return filesArray
 
-pics =  getPicNames()
+
 
 if CREATING:
+
+    pics =  getPicNames()
+
+
     movieCreate = 'CREATE TABLE IF NOT EXISTS MOVIES ' \
                   '(' \
                   'ID INTEGER, NAME TEXT, GENRES TEXT' \
@@ -86,44 +89,79 @@ if CREATING:
 
 
 def getAvgRating(MovieID):
+    conn = sqlite3.connect("data\movies.db")
+    conn.text_factory = str
+    c = conn.cursor()
+
     t = (str(MovieID),)
     c.execute('SELECT AVG(RATING) FROM RATINGS WHERE MOVIEID = ?', t)
     avg = c.fetchone()
+    conn.close()
     return avg[0]
 
 def getGenres(MovieID):
+    conn = sqlite3.connect("data\movies.db")
+    conn.text_factory = str
+    c = conn.cursor()
+
     t = (str(MovieID),)
     c.execute('SELECT GENRES FROM MOVIES WHERE ID = ?', t)
     genres = c.fetchone()[0]
+    conn.close()
     return genres.split("|")
 
 def getTags(MovieID):
+    conn = sqlite3.connect("data\movies.db")
+    conn.text_factory = str
+    c = conn.cursor()
+
     t = (str(MovieID),)
     c.execute('SELECT DISTINCT TAG FROM TAGS WHERE MOVIEID = ?', t)
     tags = c.fetchall()
     tagArr = []
     for row in tags:
         tagArr.append(row[0])
+    conn.close()
     return tagArr
 
 def getName(MovieID):
+    conn = sqlite3.connect("data\movies.db")
+    conn.text_factory = str
+    c = conn.cursor()
+
     t = (str(MovieID),)
     c.execute('SELECT NAME FROM MOVIES WHERE ID = ?', t)
-    return c.fetchone()[0]
+    nameArr = c.fetchone()
+    if nameArr is None:
+        return None
+    conn.close()
+    return nameArr[0]
 
 def getRatingCount(MovieID):
+    conn = sqlite3.connect("data\movies.db")
+    conn.text_factory = str
+    c = conn.cursor()
+
     t = (str(MovieID),)
     c.execute('SELECT COUNT(1) FROM RATINGS WHERE MOVIEID = ?', t)
-    return c.fetchone()[0]
+    count = c.fetchone()[0]
+    conn.close()
+    return count
 
 def getSimilarMovieNameAndIDs(MovieName):
-    t = (MovieName.lower(),)
-    c.execute('SELECT ID, NAME FROM MOVIES WHERE LOWER(NAME) LIKE ?', '%' + t + '%')
+    conn = sqlite3.connect("data\movies.db")
+    conn.text_factory = str
+    c = conn.cursor()
+
+    t = ( '%' + MovieName.lower() + '%', )
+    c.execute('SELECT ID, NAME FROM MOVIES WHERE LOWER(NAME) LIKE ?', t)
     possibleNames = c.fetchall()
     nameArr = []
     for row in possibleNames:
         nameArr.append((row[0], row[1]))
+    conn.close()
     return nameArr
+
 
 #print getAvgRating(1)
 #print getGenres(1)
