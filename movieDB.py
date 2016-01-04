@@ -114,7 +114,7 @@ def getSimilarMovieNameAndIDs(MovieName):
 #print getAvgRating(1)
 #print getGenres(1)
 #print getTags(100)
-print getName(1748)
+print getName(6377)
 #print getRatingCount(588)
 #print getSimilarMovieNameAndIDs("Toy")
 
