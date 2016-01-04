@@ -4,7 +4,7 @@ import csv
 #DO NOT PUT THE FLAG TO TRUE IF YOU DON't WANT TO CREATE ALL OF THE DB AGAIN!
 CREATING = False
 
-conn = sqlite3.connect("data\movies.db")
+conn = sqlite3.connect("data\movies2.db")
 
 conn.text_factory = str
 
@@ -114,7 +114,7 @@ def getSimilarMovieNameAndIDs(MovieName):
 #print getAvgRating(1)
 #print getGenres(1)
 #print getTags(100)
-print getName(6377)
+print getName(4816)
 #print getRatingCount(588)
 #print getSimilarMovieNameAndIDs("Toy")
 
