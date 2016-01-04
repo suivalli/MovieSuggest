@@ -14,11 +14,11 @@ PICTURE_HEIGHT = 2160
 NUM_CLUSTERS = 5
 VERBOSE = False
 
-def cli_progress(current_val, end_val, bar_length=20):
+def cli_progress(current_val, end_val, filename, bar_length=20):
     percent = float(current_val) / end_val
     hashes = '#' * int(round(percent * bar_length))
     spaces = ' ' * (bar_length - len(hashes))
-    sys.stdout.write("\rPercent: [{0}] {1}%".format(hashes + spaces, int(round(percent * 100))))
+    sys.stdout.write("\rPercent: [{0}] {1}%\tfile {2}".format(hashes + spaces, int(round(percent * 100)), filename))
     sys.stdout.flush()
 '''
 def getDominant(img):
@@ -102,10 +102,11 @@ def makePicture(videofile, outputname):
             ret = c.grab()
         elif frames % fps == 0:
             ret, img = c.read()
-            values.append(getColor(img))
+            if ret:
+                values.append(getColor(img))
             if VERBOSE:
-                cli_progress(frames,framecount)
-                print ("\t" + str(frames) + "/" + str(int(framecount)) + " completed")
+                cli_progress(frames,framecount, outputname)
+                #print ("\t" + str(frames) + "/" + str(int(framecount)) + " completed")
         frames += 1
 
     pic = np.zeros((PICTURE_HEIGHT, len(values), 3), np.uint8)
@@ -114,6 +115,7 @@ def makePicture(videofile, outputname):
 
     dat = np.zeros((1, len(values), 3), np.uint8)
     dat[0] = values
+    dat = cv2.resize(dat,(PICTURE_WIDTH, 1), interpolation=cv2.INTER_CUBIC)
     res = cv2.resize(pic,(PICTURE_WIDTH, PICTURE_HEIGHT), interpolation= cv2.INTER_CUBIC)
     cv2.imwrite("pics/" + outputname + "_dat.jpg", dat)
     cv2.imwrite("pics/" + outputname + "_orig.jpg", pic)
@@ -134,22 +136,28 @@ def getAudio(videofile):
         print "Audio made!"
 
 def getMovieFiles(directory):
-    files = []
+    filesArray = []
+    madeArray = []
+    for root, dirs, files in os.walk("pics/"):
+        for file in files:
+            if file.endswith("_dat.jpg"):
+                name = file.split("_")[0]
+                madeArray.append(name)
     for root, dirs, files in os.walk(directory):
         for file in files:
             if file.endswith(".mp4"):
-                print (os.path.join(root, file))
-                print (file)
-                files.append((os.path.join(root,file), file))
+                filesArray.append((os.path.join(root,file), file))
             if file.endswith(".avi"):
-                print (os.path.join(root, file))
-                print (file)
-                files.append((os.path.join(root,file), file))
-    for file in files:
+                filesArray.append((os.path.join(root,file), file))
+            if file.endswith(".mkv"):
+                filesArray.append((os.path.join(root,file), file))
+    for file in filesArray:
         filename = file[1].split(".")[0]
-        if VERBOSE:
+        if filename in madeArray:
+            print ("Already processed. Moving along.")
+        else:
             print ("Starting to process file " + filename + ".")
-        makePicture(file[0], filename)
+            makePicture(file[0], filename)
 
 def usage():
     print ("-i or --input: Input file name")
@@ -162,7 +170,7 @@ def main(argv):
     global VERBOSE, PICTURE_WIDTH, PICTURE_HEIGHT
     input = ""
     output = ""
-    dir = ""
+    directory = ""
     try:
         opts, args = getopt.getopt(argv, "d:hi:o:v", ["directory=","help", "input=", "output=", "verbose", "width", "height"])
     except getopt.GetoptError:
