@@ -24,7 +24,12 @@ def getBestMovies(distances):
     third = distances.index(sortedDist[4])
     fourth = distances.index(sortedDist[5])
     fifth = distances.index(sortedDist[6])
-    return (first, second, third, fourth, fifth)
+    sixth = distances.index(sortedDist[7])
+    seventh = distances.index(sortedDist[8])
+    eight = distances.index(sortedDist[9])
+    ninth = distances.index(sortedDist[10])
+    tenth = distances.index(sortedDist[11])
+    return (first, second, third, fourth, fifth, sixth, seventh, eight, ninth, tenth)
 
 def findRecommendations(MovieID):
     f = open("data/matrix.csv", 'r')
@@ -38,8 +43,8 @@ def findRecommendations(MovieID):
             if recomm[0] == str(MovieID):
                 indexes = getBestMovies(recomm[1:])
                 break
-    return (movies[indexes[0] + 1], movies[indexes[1] + 1], movies[indexes[2] + 1], movies[indexes[3] + 1], movies[indexes[4] + 1])
-
+    return (movies[indexes[0] + 1], movies[indexes[1] + 1], movies[indexes[2] + 1], movies[indexes[3] + 1], movies[indexes[4] + 1],
+            movies[indexes[5] + 1], movies[indexes[6] + 1], movies[indexes[7] + 1], movies[indexes[8] + 1], movies[indexes[9] + 1])
 
 def main():
     global MORE
