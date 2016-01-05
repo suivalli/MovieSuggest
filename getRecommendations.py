@@ -1,6 +1,5 @@
 __author__ = 'suidov'
 
-import scoreMatrix
 import movieDB
 
 MORE = True
@@ -16,6 +15,30 @@ def movieInput():
             return []
     except ValueError:
         return movieDB.getSimilarMovieNameAndIDs(movie)
+
+def getBestMovies(distances):
+    sortedDist = distances[:]
+    sortedDist.sort()
+    first = distances.index(sortedDist[2])
+    second = distances.index(sortedDist[3])
+    third = distances.index(sortedDist[4])
+    fourth = distances.index(sortedDist[5])
+    fifth = distances.index(sortedDist[6])
+    return (first, second, third, fourth, fifth)
+
+def findRecommendations(MovieID):
+    f = open("data/matrix.csv", 'r')
+    header = True
+    for row in f:
+        if header:
+            header = False
+            movies = row.split("\t")
+        if not header:
+            recomm = row.split("\t")
+            if recomm[0] == str(MovieID):
+                indexes = getBestMovies(recomm[1:])
+                break
+    return (movies[indexes[0] + 1], movies[indexes[1] + 1], movies[indexes[2] + 1], movies[indexes[3] + 1], movies[indexes[4] + 1])
 
 
 def main():
@@ -39,8 +62,9 @@ def main():
             movieID = found[index][0]
             movieName = found[index][1]
             print "Searching for recommendations."
+            print ""
         if len(found) > 0:
-            recommendations = scoreMatrix.findRecommendations(movieID)
+            recommendations = findRecommendations(movieID)
             for i in range(0,len(recommendations)):
                 name = movieDB.getName(recommendations[i])
                 genres = movieDB.getGenres(recommendations[i])
@@ -51,9 +75,11 @@ def main():
                 print "Recommendation nr." + str(i + 1) + ": '" + name + "'."
                 print "Genres: " + gStr
                 print "--------------------------------"
+        print ""
         print "Do you want to search for another movie?"
         yorn = raw_input("Type 'y' or 'n' and press enter.")
         if yorn != 'y':
             MORE = False
+        print ""
 
 main()

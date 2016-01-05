@@ -30,11 +30,34 @@ def getDistanceSum(pic1, pic2):
         sum += getEuclidDistance(img1[0][i],img2[0][i])
     return sum
 
+def getChannelSums(pic):
+    img = cv2.imread(pic)
+    r, g, b = 0
+    for i in range(0,3840):
+        r += img[0][i][2]
+        g += img[0][i][1]
+        b += img[0][i][0]
+    return [r,g,b]
+
+def sameDominantColor(dic1, dic2):
+    dic1Dom = dic1.index(max(dic1))
+    dic2Dom = dic2.index(max(dic2))
+    if dic1Dom == dic2Dom:
+        return True
+    else:
+        return False
+
+
 def getScore(pic1,pic2):
     distanceSum = getDistanceSum(pic1,pic2) - 39000
+    chSum1 = getChannelSums(pic1)
+    chSum2 = getChannelSums(pic2)
+    same = sameDominantColor(chSum1, chSum2)
     changes1 = getNumTransforms(pic1)
     changes2 = getNumTransforms(pic2)
     score = distanceSum - 10 * (abs(changes1 - changes2))
+    if same:
+        score -= 150
     return score
 
 def writeDistanceMatrix(pics):
@@ -53,29 +76,7 @@ def writeDistanceMatrix(pics):
         f.write(row)
     f.close()
 
-def getBestMovies(distances):
-    sortedDist = distances[:]
-    sortedDist.sort()
-    first = distances.index(sortedDist[2])
-    second = distances.index(sortedDist[3])
-    third = distances.index(sortedDist[4])
-    fourth = distances.index(sortedDist[5])
-    fifth = distances.index(sortedDist[6])
-    return (first, second, third, fourth, fifth)
 
-def findRecommendations(MovieID):
-    f = open("data/matrix.csv", 'r')
-    header = True
-    for row in f:
-        if header:
-            header = False
-            movies = row.split("\t")
-        if not header:
-            recomm = row.split("\t")
-            if recomm[0] == str(MovieID):
-                indexes = getBestMovies(recomm[1:])
-                break
-    return (movies[indexes[0] + 1], movies[indexes[1] + 1], movies[indexes[2] + 1], movies[indexes[3] + 1], movies[indexes[4] + 1])
 
 #writeDistanceMatrix(getPics())
 #print getNumTransforms('pics/Pirates of the Caribbean On Stranger Tides_dat.jpg')
