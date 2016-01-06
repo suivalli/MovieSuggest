@@ -50,7 +50,8 @@ def main():
         if len(found) == 0:
             print "Found no movies with that name. Please try again"
         elif len(found) == 1:
-            print "Found '" + found[0][1] + "'. Searching for recommendations."
+            print "Found '" + found[0][1] + "', ID: " + str(found[0][0]) + ". Searching for recommendations."
+            print ""
             movieID = found[0][0]
             movieName = found[0][1]
         elif len(found) > 1:
@@ -73,6 +74,7 @@ def main():
                     gStr += genre + ", "
                 gStr = gStr[:-2]
                 print "Recommendation nr." + str(i + 1) + ": '" + name + "'."
+                print "ID: " + str(recommendations[i])
                 print "Genres: " + gStr
                 print "--------------------------------"
         print ""
