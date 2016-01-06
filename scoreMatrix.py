@@ -32,7 +32,7 @@ def getDistanceSum(pic1, pic2):
 
 def getChannelSums(pic):
     img = cv2.imread(pic)
-    r, g, b = 0
+    r, g, b = 0, 0, 0
     for i in range(0,3840):
         r += img[0][i][2]
         g += img[0][i][1]
